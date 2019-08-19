@@ -113,6 +113,26 @@ class Api:
         return data
 
 
+def mac2dec(mac):
+    mac = mac.replace(':', '')
+    return int(mac, 16)
+
+
+def dec2mac(mac):
+    mac = hex(mac).split('x')[-1].upper()
+    mac = mac.zfill(12)
+    for pos in range(10, 0, -2):
+        mac = mac[:pos] + ':' + mac[pos:]
+    return mac
+
+
+def decIncMAC(mac, value):
+    '''Decrements or increments MAC address'''
+    mac = mac2dec(mac)
+    mac += value
+    return dec2mac(mac)
+
+
 def containsAlgo(t_mac, wps_pin, pinGen):
     '''Checks if a WPS PIN is generated according to a known algorithm'''
     common_static = ['00000000', '12345670', '12345678']
