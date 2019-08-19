@@ -113,7 +113,7 @@ class Api:
         return data
 
 
-def containsAlgo(t_mac, wps_pin):
+def containsAlgo(t_mac, wps_pin, pinGen):
     '''Checks if a WPS PIN is generated according to a known algorithm'''
     common_static = ['00000000', '12345670', '12345678']
     tenda_static = ['03436080', '03436165', '03974247', '06966409', '09278325', '19967899', '25086164', '25563818', '25777390', '27334737', '35806691', '45304347', '50542208', '63410372', '63491838', '71294988', '74250226']
