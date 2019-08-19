@@ -1,5 +1,5 @@
 The program needs Python version 3.5 and above.
-Firstly, install requirements run:
+Firstly, to install requirements, run:
 On Linux-based system (as superuser):
 pip3 install -r requirements.txt
 
