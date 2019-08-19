@@ -221,6 +221,7 @@ if __name__ == '__main__':
         source_bssid = namespace.bssid
     else:
         source_bssid = input('Please specify the BSSID: ')
+    source_bssid = source_bssid.upper()
 
     a = ':'.join(source_bssid.split(':')[:-1]) + '*'
     res = session.find(bssid=a, pin='□□□□□□□□')
