@@ -6,12 +6,14 @@ except ImportError:
 Please install with:\npip3 install requests\nor\n
 pip install requests
 ''')
+    exit(1)
 import argparse
 try:
 	import WPSpin
 except ImportError:
 	print('''The script needs WPSpin.py module\n
 Make sure the WPSpin.py file is in the current directory''')
+	exit(1)
 from collections import OrderedDict
 import time
 
