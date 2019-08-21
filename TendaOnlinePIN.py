@@ -291,11 +291,12 @@ if __name__ == '__main__':
     for bssid, value in pins.items():
         pin_list = value['pins']
         distance = value['distance']
-        print('\nPINs generated with {} (distance: {}; count: {}):'.format(
-            bssid, distance, len(pin_list)))
-        counter = 1
-        for pin in pin_list:
-            # Pretty printing
-            space = ' ' * (3-len(str(counter)))
-            print('{}){}{}'.format(counter, space, pin))
-            counter += 1
+        if pin_list:
+            print('\nPINs generated with {} (distance: {}; count: {}):'.format(
+                bssid, distance, len(pin_list)))
+            counter = 1
+            for pin in pin_list:
+                # Pretty printing
+                space = ' ' * (3-len(str(counter)))
+                print('{}){}{}'.format(counter, space, pin))
+                counter += 1
