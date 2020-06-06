@@ -22,7 +22,7 @@ Make sure the WPSpin.py file is in the current directory''')
 # Tenda's DeltaMAC -> DeltaPINs hashmap
 # DeltaPINs are sorted by frequency
 deltas_table = {int(k): v for k, v in json.load(open('tenda_deltas.json', encoding='utf-8')).items()}
-max_bssid_distance = max(deltas_table)
+max_deltamac = max(deltas_table)
 
 
 def mac2dec(mac):
@@ -159,27 +159,27 @@ if __name__ == '__main__':
             data[bssid] = int(pin[:-1])
 
     # Dictionary of deltaMAC as key and BSSID/PIN as value
-    distances = {}
+    deltas = {}
 
     # Calculating all deltaMACs
     for bssid, pin in data.items():
-        distance = subMAC(bssid, target_bssid)
-        if (distance != 0) and (distance not in distances) \
-                and (abs(distance) <= max_bssid_distance):
-            distances[distance] = {'bssid': bssid, 'pin': pin}
+        deltaMac = subMAC(bssid, target_bssid)
+        if (deltaMac != 0) and (deltaMac not in deltas) \
+                and (abs(deltaMac) <= max_deltamac):
+            deltas[deltaMac] = {'bssid': bssid, 'pin': pin}
 
     # Sorting deltaMACs as absolutely values
-    if distances:
-        distances = OrderedDict(
-            sorted(distances.items(), key=lambda x: abs(x[0]))
+    if deltas:
+        deltas = OrderedDict(
+            sorted(deltas.items(), key=lambda x: abs(x[0]))
             )
-        print('[+] {} anchor points defined'.format(len(distances)))
+        print('[+] {} anchor points defined'.format(len(deltas)))
     else:
         print('[-] Not found anchor points')
 
     pins = OrderedDict()
     anchor_cnt = 0
-    for deltaMac, value in distances.items():
+    for deltaMac, value in deltas.items():
         bssid = value['bssid']
         pin = value['pin']
         temp_pins = []
@@ -193,7 +193,7 @@ if __name__ == '__main__':
             rest_pin %= int(1e7)
             rest_pin = (str(rest_pin) + str(pinGen.checksum(rest_pin))).zfill(8)
             temp_pins.append(rest_pin)
-        pins[bssid] = {'pins': temp_pins, 'distance': deltaMac}
+        pins[bssid] = {'pins': temp_pins, 'deltamac': deltaMac}
         if namespace.anchors != 0:
             anchor_cnt += 1
             if anchor_cnt == namespace.anchors:
@@ -201,10 +201,10 @@ if __name__ == '__main__':
 
     for bssid, value in pins.items():
         pin_list = value['pins']
-        distance = value['distance']
+        deltaMac = value['deltamac']
         if pin_list:
-            print('\nPINs generated with {} (distance: {}; count: {}):'.format(
-                bssid, distance, len(pin_list)))
+            print('\nPINs generated with {} (deltaMAC: {}; count: {}):'.format(
+                bssid, deltaMac, len(pin_list)))
             counter = 1
             for pin in pin_list:
                 # Pretty printing
