@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import argparse
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import json
+import statistics
 
 try:
     import py3wifi
@@ -95,6 +96,12 @@ def createParser():
         help='maximum number of anchor BSSIDs used for the search PINs \
         Default: unlimited'
         )
+    parser.add_argument(
+        '-m',
+        '--mode',
+        choices=['classical', 'unified', 'unified1'],
+        default='classical',
+        help='WPS PIN list mode: classical, unified. Default:  %(default)s')
 
     return parser
 
@@ -199,15 +206,57 @@ if __name__ == '__main__':
             if anchor_cnt == namespace.anchors:
                 break
 
-    for bssid, value in pins.items():
-        pin_list = value['pins']
-        deltaMac = value['deltamac']
-        if pin_list:
-            print('\nPINs generated with {} (deltaMAC: {}; count: {}):'.format(
-                bssid, deltaMac, len(pin_list)))
-            counter = 1
-            for pin in pin_list:
-                # Pretty printing
-                space = ' ' * (4-len(str(counter)))
-                print('{}){}{}'.format(counter, space, pin))
-                counter += 1
+    if not pins:
+        print('[-] No known DeltaPINs found')
+
+    if namespace.mode == 'classical':
+        for bssid, value in pins.items():
+            pin_list = value['pins']
+            deltaMac = value['deltamac']
+            if pin_list:
+                print('\nPINs generated with {} (deltaMAC: {}; count: {}):'.format(
+                    bssid, deltaMac, len(pin_list)))
+                counter = 1
+                for pin in pin_list:
+                    # Pretty printing
+                    space = ' ' * (4-len(str(counter)))
+                    print('{}){}{}'.format(counter, space, pin))
+                    counter += 1
+    elif namespace.mode == 'unified':
+        # Create combined list without repetitions with relevant sorting
+        pin_lists = []
+        for bssid, value in pins.items():
+            pin_lists.append(value['pins'])
+        pins = defaultdict(lambda : [0, 0])
+        for pin_list in pin_lists:
+            for index, pin in enumerate(pin_list):
+                pins[pin][0] += 1
+                pins[pin][1] += -index
+        pins = OrderedDict(
+            sorted(pins.items(), key=lambda x: (x[1][0], x[1][1]), reverse=True)
+            )
+        counter = 1
+        for pin, weights in pins.items():
+            # Pretty printing
+            space = ' ' * (5-len(str(counter)))
+            print('{}){}{}'.format(counter, space, pin))
+            counter += 1
+    elif namespace.mode == 'unified1':
+        # Create combined list without repetitions with relevant sorting v2
+        pin_lists = []
+        for bssid, value in pins.items():
+            pin_lists.append(value['pins'])
+        pins = defaultdict(lambda : [0, []])
+        for pin_list in pin_lists:
+            for index, pin in enumerate(pin_list):
+                pins[pin][0] += 1
+                pins[pin][1].append(index)
+        pins = OrderedDict(
+            sorted(pins.items(), key=lambda x: (x[1][0], statistics.mean(x[1][1])), reverse=True)
+            )
+        counter = 1
+        for pin, weights in pins.items():
+            # Pretty printing
+            space = ' ' * (5-len(str(counter)))
+            print('{}){}{}'.format(counter, space, pin))
+            counter += 1
