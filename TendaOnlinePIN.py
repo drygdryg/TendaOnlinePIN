@@ -190,6 +190,7 @@ if __name__ == '__main__':
         print('[+] {} anchor points defined'.format(len(deltas)))
     else:
         print('[-] Not found anchor points')
+        exit(1)
 
     pins = OrderedDict()
     anchor_cnt = 0
@@ -223,6 +224,7 @@ if __name__ == '__main__':
 
     if not pins:
         print('[-] No known DeltaPINs found')
+        exit(1)
 
     if namespace.mode == 'classical':
         for bssid, value in pins.items():
@@ -231,12 +233,12 @@ if __name__ == '__main__':
             if pin_list:
                 print('\nPINs generated with {} (deltaMAC: {}; count: {}):'.format(
                     bssid, deltaMac, len(pin_list)))
-                print('{:<4} {:<10} {:<10} {:<14} {:<8}'.format(
+                print('{:<4} {:<10} {:<10} {:<14} {}'.format(
                     '№', 'WPS PIN', 'deltaPIN', 'deltaPIN_cnt', 'isMajorDeltaPIN'))
                 for i, pin in enumerate(pin_list):
                     n = i + 1
                     # Pretty printing
-                    print('{:<4} {:<10} {:<10} {:<14} {:<8}'.format(
+                    print('{:<4} {:<10} {:<10} {:<14} {}'.format(
                         str(n) + ')', pin['pin'], pin['deltapin'],
                         pin['deltapin_count'], str(pin['deltapin_count'] > 1)))
     elif namespace.mode == 'unified':
@@ -253,12 +255,12 @@ if __name__ == '__main__':
         pins = OrderedDict(
             sorted(pins.items(), key=lambda x: (x[1][0], x[1][1]), reverse=True)
             )
-        print('{:<5} {:<10} {:<3}'.format(
+        print('{:<5} {:<10} {}'.format(
                     '№', 'WPS PIN', 'X'))
         n = 1
         for pin, weights in pins.items():
             # Pretty printing
-            print('{:<5} {:<10} {:<3}'.format(
+            print('{:<5} {:<10} {}'.format(
                 str(n) + ')', pin, weights[0]))
             n += 1
     elif namespace.mode == 'unified1':
@@ -275,11 +277,11 @@ if __name__ == '__main__':
         pins = OrderedDict(
             sorted(pins.items(), key=lambda x: (x[1][0], statistics.mean(x[1][1])), reverse=True)
             )
-        print('{:<5} {:<10} {:<3}'.format(
+        print('{:<5} {:<10} {}'.format(
                     '№', 'WPS PIN', 'X'))
         n = 1
         for pin, weights in pins.items():
             # Pretty printing
-            print('{:<5} {:<10} {:<3}'.format(
+            print('{:<5} {:<10} {}'.format(
                 str(n) + ')', pin, weights[0]))
             n += 1
