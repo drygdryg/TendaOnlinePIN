@@ -84,8 +84,8 @@ def createParser():
     parser.add_argument(
         '-i',
         '--ignore-pin',
-        action='store_const',
-        const=True,
+        action='store_true',
+        default=False,
         help='ignore if pin to BSSID is found in 3WiFi'
         )
     parser.add_argument(
@@ -101,7 +101,14 @@ def createParser():
         '--mode',
         choices=['classical', 'unified', 'unified1'],
         default='classical',
-        help='WPS PIN list mode: classical, unified. Default:  %(default)s')
+        help='WPS PIN list mode: classical, unified, unified1. Default:  %(default)s')
+    parser.add_argument(
+        '--major-deltas-only',
+        action='store_true',
+        default=False,
+        dest='major_only',
+        help='Use only major DeltaPINs (occur more than 1 time)'
+        )
 
     return parser
 
@@ -192,14 +199,22 @@ if __name__ == '__main__':
         temp_pins = []
         if abs(deltaMac) not in deltas_table:
             continue
-        for deltaPin in deltas_table[abs(deltaMac)]:
+        for element in deltas_table[abs(deltaMac)]:
+            count = element['count']
+            deltaPin = element['deltapin']
+            if namespace.major_only and (count <= 1):
+                continue
             if deltaMac > 0:
                 rest_pin = pin - deltaPin
             else:
                 rest_pin = pin + deltaPin
             rest_pin %= int(1e7)
             rest_pin = (str(rest_pin) + str(pinGen.checksum(rest_pin))).zfill(8)
-            temp_pins.append(rest_pin)
+            temp_pins.append({
+                'pin': rest_pin,
+                'deltapin': deltaPin,
+                'deltapin_count': count
+            })
         pins[bssid] = {'pins': temp_pins, 'deltamac': deltaMac}
         if namespace.anchors != 0:
             anchor_cnt += 1
@@ -216,12 +231,14 @@ if __name__ == '__main__':
             if pin_list:
                 print('\nPINs generated with {} (deltaMAC: {}; count: {}):'.format(
                     bssid, deltaMac, len(pin_list)))
-                counter = 1
-                for pin in pin_list:
+                print('{:<4} {:<10} {:<10} {:<14} {:<8}'.format(
+                    '№', 'WPS PIN', 'deltaPIN', 'deltaPIN_cnt', 'isMajorDeltaPIN'))
+                for i, pin in enumerate(pin_list):
+                    n = i + 1
                     # Pretty printing
-                    space = ' ' * (4-len(str(counter)))
-                    print('{}){}{}'.format(counter, space, pin))
-                    counter += 1
+                    print('{:<4} {:<10} {:<10} {:<14} {:<8}'.format(
+                        str(n) + ')', pin['pin'], pin['deltapin'],
+                        pin['deltapin_count'], str(pin['deltapin_count'] > 1)))
     elif namespace.mode == 'unified':
         # Create combined list without repetitions with relevant sorting
         pin_lists = []
@@ -229,18 +246,21 @@ if __name__ == '__main__':
             pin_lists.append(value['pins'])
         pins = defaultdict(lambda : [0, 0])
         for pin_list in pin_lists:
-            for index, pin in enumerate(pin_list):
+            for index, pin_obj in enumerate(pin_list):
+                pin = pin_obj['pin']
                 pins[pin][0] += 1
                 pins[pin][1] += -index
         pins = OrderedDict(
             sorted(pins.items(), key=lambda x: (x[1][0], x[1][1]), reverse=True)
             )
-        counter = 1
+        print('{:<5} {:<10} {:<3}'.format(
+                    '№', 'WPS PIN', 'X'))
+        n = 1
         for pin, weights in pins.items():
             # Pretty printing
-            space = ' ' * (5-len(str(counter)))
-            print('{}){}{}'.format(counter, space, pin))
-            counter += 1
+            print('{:<5} {:<10} {:<3}'.format(
+                str(n) + ')', pin, weights[0]))
+            n += 1
     elif namespace.mode == 'unified1':
         # Create combined list without repetitions with relevant sorting v2
         pin_lists = []
@@ -248,15 +268,18 @@ if __name__ == '__main__':
             pin_lists.append(value['pins'])
         pins = defaultdict(lambda : [0, []])
         for pin_list in pin_lists:
-            for index, pin in enumerate(pin_list):
+            for index, pin_obj in enumerate(pin_list):
+                pin = pin_obj['pin']
                 pins[pin][0] += 1
                 pins[pin][1].append(index)
         pins = OrderedDict(
             sorted(pins.items(), key=lambda x: (x[1][0], statistics.mean(x[1][1])), reverse=True)
             )
-        counter = 1
+        print('{:<5} {:<10} {:<3}'.format(
+                    '№', 'WPS PIN', 'X'))
+        n = 1
         for pin, weights in pins.items():
             # Pretty printing
-            space = ' ' * (5-len(str(counter)))
-            print('{}){}{}'.format(counter, space, pin))
-            counter += 1
+            print('{:<5} {:<10} {:<3}'.format(
+                str(n) + ')', pin, weights[0]))
+            n += 1
