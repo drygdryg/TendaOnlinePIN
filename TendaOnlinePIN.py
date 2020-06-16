@@ -4,21 +4,8 @@ from collections import OrderedDict, defaultdict
 import json
 import statistics
 
-try:
-    import py3wifi
-except ImportError:
-    print('''The script needs py3wifi module\n
-Please install with:\npip3 install py3wifi\nor\n
-pip install py3wifi
-''')
-    exit(1)
-try:
-    import WPSpin
-except ImportError:
-    print('''The script needs WPSpin.py module\n
-Make sure the WPSpin.py file is in the current directory''')
-    exit(1)
-
+import py3wifi
+import wpspin
 
 # Tenda's DeltaMAC -> DeltaPINs hashmap
 # DeltaPINs are sorted by frequency
@@ -159,7 +146,7 @@ if __name__ == '__main__':
     print('[+] Found {} records'.format(len(res)))
 
     # Filtering and processing 3WiFi data
-    pinGen = WPSpin.WPSpin()
+    pinGen = wpspin.WPSpin()
     data = {}
     for item in res:
         bssid = item['bssid']
@@ -246,7 +233,7 @@ if __name__ == '__main__':
         pin_lists = []
         for bssid, value in pins.items():
             pin_lists.append(value['pins'])
-        pins = defaultdict(lambda : [0, 0])
+        pins = defaultdict(lambda: [0, 0])
         for pin_list in pin_lists:
             for index, pin_obj in enumerate(pin_list):
                 pin = pin_obj['pin']
@@ -268,7 +255,7 @@ if __name__ == '__main__':
         pin_lists = []
         for bssid, value in pins.items():
             pin_lists.append(value['pins'])
-        pins = defaultdict(lambda : [0, []])
+        pins = defaultdict(lambda: [0, []])
         for pin_list in pin_lists:
             for index, pin_obj in enumerate(pin_list):
                 pin = pin_obj['pin']
